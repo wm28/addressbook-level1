@@ -42,6 +42,11 @@ public class AddressBook {
     private static final String DEFAULT_STORAGE_FILEPATH = "addressbook.txt";
 
     /**
+     *  file path for vCard file exportation
+     */
+    private static final String DEFAULT_VCF_STORAGE_FILEPATH = "addressbook.vcf";
+
+    /**
      * Version info of the program.
      */
     private static final String VERSION = "AddessBook Level 1 - Version 1.0";
@@ -90,6 +95,8 @@ public class AddressBook {
     private static final String MESSAGE_STORAGE_FILE_CREATED = "Created new empty storage file: %1$s";
     private static final String MESSAGE_WELCOME = "Welcome to your Address Book!";
     private static final String MESSAGE_USING_DEFAULT_FILE = "Using default storage file : " + DEFAULT_STORAGE_FILEPATH;
+    private static final String MESSAGE_ADDRESSBOOK_EXPORTED = "Address book has been exported!";
+
 
     // These are the prefix strings to define the data type of a command parameter
     private static final String PERSON_DATA_PREFIX_PHONE = "p/";
@@ -132,6 +139,11 @@ public class AddressBook {
     private static final String COMMAND_EXIT_WORD = "exit";
     private static final String COMMAND_EXIT_DESC = "Exits the program.";
     private static final String COMMAND_EXIT_EXAMPLE = COMMAND_EXIT_WORD;
+
+    private static final String COMMAND_EXPORT_WORD = "export";
+    private static final String COMMAND_EXPORT_DESC = "Exports contacts to .vcf file format.";
+    private static final String COMMAND_EXPORT_EXAMPLE = COMMAND_EXPORT_WORD;
+
 
     private static final String DIVIDER = "===================================================";
 
@@ -369,22 +381,24 @@ public class AddressBook {
         final String commandType = commandTypeAndParams[0];
         final String commandArgs = commandTypeAndParams[1];
         switch (commandType) {
-        case COMMAND_ADD_WORD:
-            return executeAddPerson(commandArgs);
-        case COMMAND_FIND_WORD:
-            return executeFindPersons(commandArgs);
-        case COMMAND_LIST_WORD:
-            return executeListAllPersonsInAddressBook();
-        case COMMAND_DELETE_WORD:
-            return executeDeletePerson(commandArgs);
-        case COMMAND_CLEAR_WORD:
-            return executeClearAddressBook();
-        case COMMAND_HELP_WORD:
-            return getUsageInfoForAllCommands();
-        case COMMAND_EXIT_WORD:
-            executeExitProgramRequest();
-        default:
-            return getMessageForInvalidCommandInput(commandType, getUsageInfoForAllCommands());
+            case COMMAND_ADD_WORD:
+                return executeAddPerson(commandArgs);
+            case COMMAND_FIND_WORD:
+                return executeFindPersons(commandArgs);
+            case COMMAND_LIST_WORD:
+                return executeListAllPersonsInAddressBook();
+            case COMMAND_DELETE_WORD:
+                return executeDeletePerson(commandArgs);
+            case COMMAND_CLEAR_WORD:
+                return executeClearAddressBook();
+            case COMMAND_EXPORT_WORD:
+                return executeExportAddressBook();
+            case COMMAND_HELP_WORD:
+                return getUsageInfoForAllCommands();
+            case COMMAND_EXIT_WORD:
+                executeExitProgramRequest();
+            default:
+                return getMessageForInvalidCommandInput(commandType, getUsageInfoForAllCommands());
         }
     }
 
@@ -577,6 +591,16 @@ public class AddressBook {
         ArrayList<String[]> toBeDisplayed = getAllPersonsInAddressBook();
         showToUser(toBeDisplayed);
         return getMessageForPersonsDisplayedSummary(toBeDisplayed);
+    }
+
+    /**
+     * Exports all persons in the address book in to a .vcf file
+     *
+     * @return feedback display message for the operation result
+     */
+    private static String executeExportAddressBook() {
+        exportAddressBook();
+        return MESSAGE_ADDRESSBOOK_EXPORTED;
     }
 
     /**
@@ -826,6 +850,23 @@ public class AddressBook {
         ALL_PERSONS.addAll(persons);
     }
 
+    /**
+     * Export all persons in the address book in the vCard format and saves it
+     * to an external .vcf file named "addressbook.vcf".
+     */
+    private static void exportAddressBook() {
+        final ArrayList<String> linesToWrite = new ArrayList<>();
+        for(String []person: ALL_PERSONS){
+            linesToWrite.add(encodePersonToVcfString(person));
+        }
+        try {
+            Files.write(Paths.get(DEFAULT_VCF_STORAGE_FILEPATH), linesToWrite);
+        } catch (IOException ioe) {
+            showToUser(String.format(MESSAGE_ERROR_WRITING_TO_FILE, DEFAULT_VCF_STORAGE_FILEPATH));
+            exitProgram();
+        }
+    }
+
 
     /*
      * ===========================================
@@ -1073,6 +1114,20 @@ public class AddressBook {
         //TODO: implement a more permissive validation
     }
 
+    /**
+     * Returns true if the given string is a legal person email
+     *
+     * @param person String array representing the person (used in internal data)
+     * @return encoded person string in the vCard format
+     */
+    private static String encodePersonToVcfString(String [] person){
+        String header = "BEGIN:VCARD\nVERSION:2.1\n";
+        String name = "N:;" + getNameFromPerson(person) + ";;;\n";
+        String phone = "TEL;CELL;PREF:" + getPhoneFromPerson(person) + "\n";
+        String email = "EMAIL:" + getEmailFromPerson(person) +"\n";
+        String footer = "END:VCARD";
+        return header + name + phone + email + footer;
+    }
 
     /*
      * ===============================================
@@ -1087,6 +1142,7 @@ public class AddressBook {
                 + getUsageInfoForViewCommand() + LS
                 + getUsageInfoForDeleteCommand() + LS
                 + getUsageInfoForClearCommand() + LS
+                + getUsageInfoForExportCommand() + LS
                 + getUsageInfoForExitCommand() + LS
                 + getUsageInfoForHelpCommand();
     }
@@ -1118,6 +1174,12 @@ public class AddressBook {
                 + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_CLEAR_EXAMPLE) + LS;
     }
 
+    /** Returns string for showing 'export' command usage instruction */
+    private static String getUsageInfoForExportCommand() {
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_EXPORT_WORD, COMMAND_EXPORT_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_EXPORT_EXAMPLE) + LS;
+    }
+
     /** Returns the string for showing 'view' command usage instruction */
     private static String getUsageInfoForViewCommand() {
         return String.format(MESSAGE_COMMAND_HELP, COMMAND_LIST_WORD, COMMAND_LIST_DESC) + LS
@@ -1126,14 +1188,14 @@ public class AddressBook {
 
     /** Returns string for showing 'help' command usage instruction */
     private static String getUsageInfoForHelpCommand() {
-        return String.format(MESSAGE_COMMAND_HELP, COMMAND_HELP_WORD, COMMAND_HELP_DESC)
-                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_HELP_EXAMPLE);
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_HELP_WORD, COMMAND_HELP_DESC) + LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_HELP_EXAMPLE) + LS;
     }
 
     /** Returns the string for showing 'exit' command usage instruction */
     private static String getUsageInfoForExitCommand() {
-        return String.format(MESSAGE_COMMAND_HELP, COMMAND_EXIT_WORD, COMMAND_EXIT_DESC)
-                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_EXIT_EXAMPLE);
+        return String.format(MESSAGE_COMMAND_HELP, COMMAND_EXIT_WORD, COMMAND_EXIT_DESC)+ LS
+                + String.format(MESSAGE_COMMAND_HELP_EXAMPLE, COMMAND_EXIT_EXAMPLE)+ LS;
     }
 
 
