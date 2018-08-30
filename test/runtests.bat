@@ -25,6 +25,9 @@ copy /y NUL data\valid.filename
 java -classpath ..\bin seedu.addressbook.AddressBook "data/valid.filename" < exitinput.txt >> actual.txt
 REM run the program, feed commands from input.txt file and redirect the output to the actual.txt
 java -classpath ..\bin seedu.addressbook.AddressBook < input.txt >> actual.txt
-
+ 
 REM compare the output to the expected output
 FC actual.txt expected.txt
+
+REM compare the output vCard file and the expected vCard file
+FC addressbook.vcf expected_addressbook.vcf

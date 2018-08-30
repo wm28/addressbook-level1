@@ -69,8 +69,15 @@
 || clear: Clears address book permanently.
 || 	Example: clear
 || 
-|| exit: Exits the program.	Example: exit
-|| help: Shows program usage instructions.	Example: help
+|| export: Exports contacts to .vcf file format.
+|| 	Example: export
+|| 
+|| exit: Exits the program.
+|| 	Example: exit
+|| 
+|| help: Shows program usage instructions.
+|| 	Example: help
+|| 
 || ===================================================
 || Enter command: || [Command entered:  clear]
 || Address book has been cleared!
@@ -267,6 +274,9 @@
 || 	2. Dickson Ee  Phone Number: 444444  Email: dickson@nus.edu.sg
 || 
 || 2 persons found!
+|| ===================================================
+|| Enter command: || [Command entered:  export]
+|| Address book has been exported!
 || ===================================================
 || Enter command: || [Command entered:  clear]
 || Address book has been cleared!

@@ -1,0 +1,12 @@
+BEGIN:VCARD
+VERSION:2.1
+N:;Betsy Choo;;;
+TEL;CELL;PREF:222222
+EMAIL:benchoo@nus.edu.sg
+END:VCARD
+BEGIN:VCARD
+VERSION:2.1
+N:;Dickson Ee;;;
+TEL;CELL;PREF:444444
+EMAIL:dickson@nus.edu.sg
+END:VCARD
